@@ -9,6 +9,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
+const { METHODS } = require("http");
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use((req, res, next) => {
 
 app.use("/feed", feedRoutes);
 app.use("/auth", authRoutes);
+
 app.use((error, req, res, next) => {
   console.log(error);
   const status = error.statusCode || 500;
@@ -61,6 +63,10 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(process.env.MONGO_API)
   .then((result) => {
-    app.listen(process.env.PORT);
+    const server = app.listen(process.env.PORT);
+    const io = require("./socket").init(server);
+    io.on("connection", (socket) => {
+      console.log("Client connected");
+    });
   })
   .catch((error) => console.log(error));
